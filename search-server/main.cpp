@@ -55,7 +55,7 @@ struct Document {
 class SearchServer {
 public:
 
-	int document_count_ = 0;
+	
 
 	// преобразование строки стоп-слов в контейнер set stop_words_ в поле класса SearchServer 
 	void SetStopWords(const string& text) {
@@ -66,6 +66,7 @@ public:
 	}
 	// преобразование строки из входного потока в контейнер map word_to_document_freqs_
 	void AddDocument(int document_id, const string& document) {
+		document_count_++;
 		if (document.length() != 0) {
 			const vector<string> words = SplitIntoWordsNoStop(document);
 			// проверка на пустоту документа после исключения стоп-слов
@@ -84,7 +85,7 @@ public:
 	vector<Document> FindTopDocuments(const string& raw_query) const {
 		const Query query_words = ParseQuery(raw_query);
 		auto matched_documents = FindAllDocuments(query_words);
-		
+
 		sort(matched_documents.begin(), matched_documents.end(),
 			[](const Document& lhs, const Document& rhs) {
 				return lhs.relevance > rhs.relevance;
@@ -96,7 +97,7 @@ public:
 	}
 
 private:
-
+	int document_count_ = 0;
 	struct Query {
 		set<string> plus_words;
 		set<string> minus_words;
@@ -108,7 +109,7 @@ private:
 
 	set<string> stop_words_;
 
-	
+
 
 	bool IsStopWord(const string& word) const {
 		return stop_words_.count(word) > 0;
@@ -128,9 +129,9 @@ private:
 		Query query;
 		for (const string& word : SplitIntoWordsNoStop(text)) {
 			if (word[0] == '-') { // если в слове запроса первый символ "-" тогда это минус-слово
-				word.substr(1); // удаляем "-"
-				if (!IsStopWord(word)) { // проверяем есть ли минус-слово в стоп-словах
-					query.minus_words.insert(word); // добавляем в контейтер минус-слов в структуре query
+				 // удаляем "-"
+				if (!IsStopWord(word.substr(1))) { // проверяем есть ли минус-слово в стоп-словах
+					query.minus_words.insert(word.substr(1)); // добавляем в контейтер минус-слов в структуре query
 				}
 			}
 			else {
@@ -151,23 +152,30 @@ private:
 			// есть смысл с ним работать
 			if (word_to_document_freqs_.count(word) > 0) {
 				double number_docs = word_to_document_freqs_.at(word).size();
-				IDF = log(document_count_/number_docs);
+				IDF = log(document_count_ / number_docs);
 				word_IDF[word] = IDF;
 			}
 		}
-			   		
+		
+		// перебираем минус-слова и записываем номера документов в которых они встречаются
+		vector<int> minus_docs;
+		for (const auto& word : query_words.minus_words) {
+			if (word_to_document_freqs_.count(word) > 0) {
+				for (const auto& d : word_to_document_freqs_.at(word)) {
+					minus_docs.push_back(d.first);
+				}
+			}
+		}
 		// перебираем номера документов
 		for (int i = 0; i < document_count_; i++) {
-		// перебираем слова запроса
-		for (const auto& word_IDF_ : word_IDF) {
-			// если есть минус-слово, то переходим к следующему слову
-			if (query_words.minus_words.count(word_IDF_.first) > 0) continue;
+			// перебираем слова запроса
+			for (const auto& word_IDF_ : word_IDF) {
 
-			for (const auto& id_TF : word_to_document_freqs_.at(word_IDF_.first)) {
-				
-				if (id_TF.first == i) {
-					double TF_IDF = (double)id_TF.second * (double)word_IDF_.second;
-					if (document_to_relevance[i] == 0) {
+				for (const auto& id_TF : word_to_document_freqs_.at(word_IDF_.first)) {
+
+					if (id_TF.first == i) {
+						double TF_IDF = (double)id_TF.second * (double)word_IDF_.second;
+						if (document_to_relevance[i] == 0) {
 							double rel = TF_IDF;
 							document_to_relevance[i] = rel;
 						}
@@ -175,11 +183,16 @@ private:
 							double rel = document_to_relevance.at(i) + TF_IDF;
 							document_to_relevance.at(i) = rel;
 						}
-				}
+					}
 				}
 			}
 		}
-
+ 		
+		// удаляем документы в которых есть минус-слова
+		for (int i : minus_docs) {
+			document_to_relevance.erase(i);
+		}
+		
 		for (const auto& a : document_to_relevance) {
 			matched_documents.push_back({ a.first, a.second });
 		}
@@ -190,8 +203,8 @@ private:
 SearchServer CreateSearchServer() {
 	SearchServer search_server;
 	search_server.SetStopWords(ReadLine()); // обращение функции SetStopWords в классе search_server
-	search_server.document_count_ = ReadLineWithNumber(); // считывание из входного потока количества документов
-	for (int document_id = 0; document_id < search_server.document_count_; ++document_id) {
+	int document_count = ReadLineWithNumber(); // считывание из входного потока количества документов
+	for (int document_id = 0; document_id < document_count; ++document_id) {
 		search_server.AddDocument(document_id, ReadLine()); // добавление документа
 	}
 	return search_server;
