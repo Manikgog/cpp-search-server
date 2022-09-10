@@ -6,10 +6,12 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <numeric>
 
 using namespace std;
 
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
+const double ACCURACY = 1e-6;
 
 string ReadLine() {
 	string s;
@@ -77,22 +79,22 @@ public:
 	}
 
 	vector<Document> FindTopDocuments(const string& raw_query) const {
-		return FindTopDocuments(raw_query, [](int document_id, DocumentStatus status, int rating) { return status == DocumentStatus::ACTUAL; });
+		return FindTopDocuments(raw_query, DocumentStatus::ACTUAL);
 	}
 
-	vector<Document> FindTopDocuments(const string& raw_query, DocumentStatus Status) const {
+	vector<Document> FindTopDocuments(const string& raw_query, DocumentStatus st) const {
 
-		return FindTopDocuments(raw_query, [&Status](int document_id, DocumentStatus status, int rating) { return status == Status; });
+		return FindTopDocuments(raw_query, [&st](int document_id, DocumentStatus status, int rating) { return status == st; });
 	}
 
 
-	template <typename T>
-	vector<Document> FindTopDocuments(const string& raw_query, T what_to_sort) const {
+	template <typename Filter>
+	vector<Document> FindTopDocuments(const string& raw_query, Filter filter) const {
 		const Query query = ParseQuery(raw_query);
-		vector<Document>  matched_documents = FindAllDocuments(query, what_to_sort); //, status
+		vector<Document>  matched_documents = FindAllDocuments(query, filter);
 		sort(matched_documents.begin(), matched_documents.end(),
 			[](const Document& lhs, const Document& rhs) {
-				if (abs(lhs.relevance - rhs.relevance) < 1e-6) {
+				if (abs(lhs.relevance - rhs.relevance) < ACCURACY) {
 					return lhs.rating > rhs.rating;
 				}
 				else {
@@ -165,10 +167,7 @@ private:
 		if (ratings.empty()) {
 			return 0;
 		}
-		int rating_sum = 0;
-		for (const int rating : ratings) {
-			rating_sum += rating;
-		}
+		int rating_sum = accumulate(ratings.begin(), ratings.end(), 0);
 		return rating_sum / static_cast<int>(ratings.size());
 	}
 
@@ -214,19 +213,21 @@ private:
 		return log(GetDocumentCount() * 1.0 / word_to_document_freqs_.at(word).size());
 	}
 
-	template <typename S>
-	vector<Document> FindAllDocuments(const Query& query, S status_) const {
+	template <typename Filter>
+	vector<Document> FindAllDocuments(const Query& query, Filter filter) const {
 		map<int, double> document_to_relevance;
 		for (const string& word : query.plus_words) {
 			if (word_to_document_freqs_.count(word) == 0) {
 				continue;
 			}
 			const double inverse_document_freq = ComputeWordInverseDocumentFreq(word);
-			for (const auto a : word_to_document_freqs_.at(word)) {
-				if (status_(a.first, documents_.at(a.first).status, documents_.at(a.first).rating)) {
-					document_to_relevance[a.first] += a.second * inverse_document_freq;
+			for (const auto [id, relevance] : word_to_document_freqs_.at(word)) {
+				const auto& doc = documents_.at(id);
+				if (filter(id, doc.status, doc.rating)) {
+					document_to_relevance[id] += relevance * inverse_document_freq;
 				}
 			}
+
 		}
 
 		for (const string& word : query.minus_words) {
@@ -247,7 +248,7 @@ private:
 	}
 };
 
-// ==================== дл¤ примера =========================
+// ==================== для примера =========================
 
 void PrintDocument(const Document& document) {
 	cout << "{ "s
@@ -259,20 +260,20 @@ void PrintDocument(const Document& document) {
 
 
 int main() {
-	 SearchServer search_server;
-    const std::vector<int> ratings1 = {1, 2, 3 , 4 , 5};
-    const std::vector<int> ratings2 = {-1, -2, 30 , -3, 44 , 5};
-    const std::vector<int> ratings3 = {12, -20, 80 , 0, 8, 0, 0, 9, 67};
-   search_server.AddDocument(0, "белый кот и модный ошейник", DocumentStatus::ACTUAL, ratings1);
-        search_server.AddDocument(1, "пушистый кот пушистый хвост", DocumentStatus::ACTUAL, ratings2);
-        search_server.AddDocument(2, "ухоженный пЄс выразительные глаза", DocumentStatus::ACTUAL, ratings3);
-        const SearchServer const_search_server = search_server;
-        const std::string query = "пушистый и ухоженный кот";
-        for (const Document& document : const_search_server.FindTopDocuments(query, DocumentStatus::ACTUAL)) {
-            std::cout << "{ "
-                 << "document_id = " << document.id << ", "
-                 << "relevance = " << document.relevance << ", "
-                 << "rating = " << document.rating
-                 << " }" << std::endl;
-        }
+	SearchServer search_server;
+	const std::vector<int> ratings1 = { 1, 2, 3 , 4 , 5 };
+	const std::vector<int> ratings2 = { -1, -2, 30 , -3, 44 , 5 };
+	const std::vector<int> ratings3 = { 12, -20, 80 , 0, 8, 0, 0, 9, 67 };
+	search_server.AddDocument(0, "белый кот и модный ошейник", DocumentStatus::ACTUAL, ratings1);
+	search_server.AddDocument(1, "пушистый кот пушистый хвост", DocumentStatus::ACTUAL, ratings2);
+	search_server.AddDocument(2, "ухоженный пёс выразительные глаза", DocumentStatus::ACTUAL, ratings3);
+	const SearchServer const_search_server = search_server;
+	const std::string query = "пушистый и ухоженный кот";
+	for (const Document& document : const_search_server.FindTopDocuments(query, DocumentStatus::ACTUAL)) {
+		std::cout << "{ "
+			<< "document_id = " << document.id << ", "
+			<< "relevance = " << document.relevance << ", "
+			<< "rating = " << document.rating
+			<< " }" << std::endl;
+	}
 }
