@@ -146,7 +146,7 @@ private:
 	};
 
 	set<string> stop_words_;
-	map<string, map<int, double>> word_to_document_freqs_;
+	map<string, map<int, double>> word_to_document_freqs_;//ключ-слово, значение - словарь, где ключ-id документа, а значение - TF данного слова
 	map<int, DocumentData> documents_;
 
 	bool IsStopWord(const string& word) const {
@@ -234,15 +234,15 @@ private:
 			if (word_to_document_freqs_.count(word) == 0) {
 				continue;
 			}
-			for (const auto a : word_to_document_freqs_.at(word)) {
-				document_to_relevance.erase(a.first);
+			for (const auto id_tf : word_to_document_freqs_.at(word)) {
+				document_to_relevance.erase(id_tf.first);
 			}
 		}
 
 		vector<Document> matched_documents;
-		for (const auto a : document_to_relevance) {
+		for (const auto [id, relevance] : document_to_relevance) {
 			matched_documents.push_back(
-				{ a.first, a.second, documents_.at(a.first).rating });
+				{ id, relevance, documents_.at(id).rating });
 		}
 		return matched_documents;
 	}
