@@ -18,7 +18,8 @@ const double ACCURACY = 1e-6;
 template <typename T, typename U>
 void AssertEqualImpl(const T& t, const U& u, const string& t_str, const string& u_str, const string& file,
 	const string& func, unsigned line, const string& hint) {
-	if (static_cast<int>t != static_cast<int>u) {
+	int t_ = t; int u_ = u;
+	if (t_ != u_) {
 		cout << boolalpha;
 		cout << file << "("s << line << "): "s << func << ": "s;
 		cout << "ASSERT_EQUAL("s << t_str << ", "s << u_str << ") failed: "s;
