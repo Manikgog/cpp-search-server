@@ -1,4 +1,4 @@
-#include <algorithm>
+﻿#include <algorithm>
 #include <iostream>
 #include <cassert>
 #include <cmath>
@@ -11,14 +11,13 @@
 
 using namespace std;
 
-/* Подставьте вашу реализацию класса SearchServer сюда */
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
 const double ACCURACY = 1e-6;
 
 template <typename T, typename U>
 void AssertEqualImpl(const T& t, const U& u, const string& t_str, const string& u_str, const string& file,
 	const string& func, unsigned line, const string& hint) {
-	int t_ = t; int u_ = u;
+	int t_= t; int u_ = u;
 	if (t_ != u_) {
 		cout << boolalpha;
 		cout << file << "("s << line << "): "s << func << ": "s;
@@ -112,12 +111,14 @@ enum class DocumentStatus {
 class SearchServer {
 public:
 	void SetStopWords(const string& text) {
+		// Ваша реализация данного метода
 		for (const string& word : SplitIntoWords(text)) {
 			stop_words_.insert(word);
 		}
 	}
 
 	void AddDocument(int document_id, const string& document, DocumentStatus status, const vector<int>& ratings) {
+		// Ваша реализация данного метода
 		const vector<string> words = SplitIntoWordsNoStop(document);
 		const double inv_word_count = 1.0 / words.size();
 		for (const string& word : words) {
@@ -128,6 +129,7 @@ public:
 
 	template <typename DocumentPredicate>
 	vector<Document> FindTopDocuments(const string& raw_query, DocumentPredicate document_predicate) const {
+		// Ваша реализация данного метода
 		const Query query = ParseQuery(raw_query);
 		vector<Document>  matched_documents = FindAllDocuments(query, document_predicate); //, status
 		sort(matched_documents.begin(), matched_documents.end(),
@@ -145,8 +147,9 @@ public:
 		return matched_documents;
 	}
 
-	vector<Document> FindTopDocuments(const string& raw_query, DocumentStatus Status) const {
-		return FindTopDocuments(raw_query, [&Status](int document_id, DocumentStatus status, int rating) { return status == Status; });
+	vector<Document> FindTopDocuments(const string& raw_query, DocumentStatus st) const {
+		// Ваша реализация данного метода
+		return FindTopDocuments(raw_query, [&st](int document_id, DocumentStatus status, int rating) { return status == st; });
 	}
 
 	vector<Document> FindTopDocuments(const string& raw_query) const {
@@ -154,6 +157,7 @@ public:
 	}
 
 	int GetDocumentCount() const {
+		// Ваша реализация данного метода
 		return documents_.size();
 	}
 
@@ -182,6 +186,7 @@ public:
 	}
 
 private:
+	// Реализация приватных методов вашей поисковой системы
 	struct DocumentData {
 		int rating;
 		DocumentStatus status;
@@ -263,28 +268,26 @@ private:
 				continue;
 			}
 			const double inverse_document_freq = ComputeWordInverseDocumentFreq(word);
-			for (const auto [id, relevance] : word_to_document_freqs_.at(word)) {
+			for (const auto[id, relevance] : word_to_document_freqs_.at(word)) {
 				const auto& doc = documents_.at(id);
 				if (filter(id, doc.status, doc.rating)) {
 					document_to_relevance[id] += relevance * inverse_document_freq;
 				}
 			}
-
 		}
 
 		for (const string& word : query.minus_words) {
 			if (word_to_document_freqs_.count(word) == 0) {
 				continue;
 			}
-			for (const auto id_tf : word_to_document_freqs_.at(word)) {
-				document_to_relevance.erase(id_tf.first);
+			for (const auto id : word_to_document_freqs_.at(word)) {
+				document_to_relevance.erase(id.first);
 			}
 		}
 
 		vector<Document> matched_documents;
-		for (const auto [id, relevance] : document_to_relevance) {
-			matched_documents.push_back(
-				{ id, relevance, documents_.at(id).rating });
+		for (const auto[id, relevance] : document_to_relevance) {
+			matched_documents.push_back({ id, relevance, documents_.at(id).rating });
 		}
 		return matched_documents;
 	}
@@ -293,14 +296,14 @@ private:
 
 // Тест проверяет, что поисковая система исключает стоп-слова при добавлении документов
 void TestExcludeStopWordsFromAddedDocumentContent() {
-	int doc_id = 42;
+	const int doc_id = 42;
 	const string content = "cat in the city"s;
 	const vector<int> ratings = { 1, 2, 3 };
 	{
 		SearchServer server;
 		server.AddDocument(doc_id, content, DocumentStatus::ACTUAL, ratings);
-		auto found_docs = server.FindTopDocuments("in"s);
-		ASSERT_EQUAL(found_docs.size(), 1lu);
+		const auto found_docs = server.FindTopDocuments("in"s);
+		ASSERT_EQUAL(found_docs.size(), 1u);
 		const Document& doc0 = found_docs[0];
 		ASSERT_EQUAL(doc0.id, doc_id);
 	}
@@ -324,7 +327,7 @@ void TestExcludedDocsWithMinusWords() {
 	server.AddDocument(0, "fluffy well-groomed cat with a collar", DocumentStatus::ACTUAL, { 1, 2, 3 });
 	server.AddDocument(1, "beautiful shepherd with expressive eyes", DocumentStatus::ACTUAL, { 3, 5, 4 });
 	auto found_docs = server.FindTopDocuments("fluffy cat collar"s); // сначала проверяем, что этот документ выводится (нет минус слов)
-	ASSERT_EQUAL(found_docs.size(), 1); // когда документ не содержит минус-слов он находится
+	ASSERT_EQUAL(found_docs.size(), 1u); // когда документ не содержит минус-слов он находится
 	server.AddDocument(0, "fluffy well-groomed cat with a collar", DocumentStatus::ACTUAL, { 1, 2, 3 });
 	server.AddDocument(1, "beautiful shepherd with expressive eyes", DocumentStatus::ACTUAL, { 3, 5, 4 });
 	found_docs = server.FindTopDocuments("fluffy cat -collar"s); // добавляем минус-слово и проверяем вывод
@@ -334,91 +337,109 @@ void TestExcludedDocsWithMinusWords() {
 // Тест проверяет вывод документов со статусом ACTUAL
 void TestOutputOfDocumentWithThe_ACTUAL_Status() {
 	SearchServer server;
-	// проверяем вывод документов со статусом ACTUAL
-	server.AddDocument(0, "fluffy well-groomed cat with a collar", DocumentStatus::ACTUAL, { 1, 2, 3 });
-	server.AddDocument(1, "beautiful shepherd with expressive eyes", DocumentStatus::IRRELEVANT, { 3, 5, 4 });
-	server.AddDocument(2, "fluffy cat", DocumentStatus::BANNED, { 1, 2, 3 });
-	auto found_docs = server.FindTopDocuments("fluffy cat collar"s, DocumentStatus::ACTUAL);
-	ASSERT_EQUAL_HINT(found_docs.size(), 1, "Must be shown document with status ACTUAL."s); // должен быть выведен один документ со статусом ACTUAL
-	ASSERT_EQUAL_HINT(found_docs[0].id, 0, "Document with status ACTUAL must be with id 0."s);
+	
 }
 
 // Тест проверяет вывод документов со статусом IRRELEVANT
-void TestOutputOfDocumentWithThe_IRRELEVANT_Status() {
+void TestingCorrectOutputStatus() {
 	SearchServer server;
-	// проверяем вывод документов со статусом IRRELEVANT
-	server.AddDocument(4, "fluffy well-groomed cat with a collar", DocumentStatus::ACTUAL, { 1, 2, 3 });
-	server.AddDocument(5, "beautiful cat with expressive eyes", DocumentStatus::IRRELEVANT, { 3, 5, 4 });
-	server.AddDocument(6, "fluffy cat", DocumentStatus::BANNED, { 1, 2, 3 });
-	auto found_docs = server.FindTopDocuments("fluffy cat collar"s, DocumentStatus::IRRELEVANT);
-	ASSERT_EQUAL_HINT(found_docs.size(), 1, "Must be shown document with status IRRELEVANT."s); // должно быть выведено два документа со статусом IRRELEVANT
-	ASSERT_EQUAL_HINT(found_docs[0].id, 5, "Document with status ACTUAL must be with id 5."s);
+	{
+		// проверяем вывод документов со статусом ACTUAL
+		SearchServer server_1;
+		server_1.AddDocument(0, "fluffy well-groomed cat with a collar", DocumentStatus::ACTUAL, { 1, 2, 3 });
+		server_1.AddDocument(1, "beautiful shepherd with expressive eyes", DocumentStatus::IRRELEVANT, { 3, 5, 4 });
+		server_1.AddDocument(2, "fluffy cat", DocumentStatus::BANNED, { 1, 2, 3 });
+		auto found_docs = server_1.FindTopDocuments("fluffy cat collar"s, DocumentStatus::ACTUAL);
+		ASSERT_EQUAL_HINT(found_docs.size(), 1, "Must be shown document with status ACTUAL."s); // должен быть выведен один документ со статусом ACTUAL
+		ASSERT_EQUAL_HINT(found_docs[0].id, 0, "Document with status ACTUAL must be with id 0."s);
+	}
+	{
+		// проверяем вывод документов со статусом IRRELEVANT
+		SearchServer server_2;
+		server_2.AddDocument(0, "fluffy well-groomed cat with a collar", DocumentStatus::ACTUAL, { 1, 2, 3 });
+		server_2.AddDocument(1, "beautiful cat with expressive eyes", DocumentStatus::IRRELEVANT, { 3, 5, 4 });
+		server_2.AddDocument(2, "fluffy cat", DocumentStatus::BANNED, { 1, 2, 3 });
+		auto found_docs = server_2.FindTopDocuments("fluffy cat collar"s, DocumentStatus::IRRELEVANT);
+		ASSERT_EQUAL_HINT(found_docs.size(), 1, "Must be shown document with status IRRELEVANT."s); // должен быть выведен один документ со статусом IRRELEVANT
+		ASSERT_EQUAL_HINT(found_docs[0].id, 1, "Document with status ACTUAL must be with id 5."s);
+	}
+	{
+		// проверяем вывод документов со статусом BANNED
+		SearchServer server_3;
+		server_3.AddDocument(0, "fluffy well-groomed cat with a collar", DocumentStatus::ACTUAL, { 1, 2, 3 });
+		server_3.AddDocument(1, "beautiful cat with expressive eyes", DocumentStatus::IRRELEVANT, { 3, 5, 4 });
+		server_3.AddDocument(2, "fluffy cat", DocumentStatus::BANNED, { 1, 2, 3 });
+		auto found_docs = server_3.FindTopDocuments("fluffy cat collar"s, DocumentStatus::BANNED);
+		ASSERT_EQUAL_HINT(found_docs.size(), 1, "Must be shown document with status BANNED."s); // должен быть выведен один документ со статусом BANNED
+		ASSERT_EQUAL_HINT(found_docs[0].id, 2, "Document with status ACTUAL must be with id 9."s);
+	}
+	{
+		// проверяем вывод документов со статусом REMOVED
+		SearchServer server_4;
+		server_4.AddDocument(0, "fluffy well-groomed cat with a collar", DocumentStatus::REMOVED, { 1, 2, 3 });
+		server_4.AddDocument(1, "beautiful cat with expressive eyes", DocumentStatus::IRRELEVANT, { 3, 5, 4 });
+		server_4.AddDocument(2, "fluffy cat", DocumentStatus::BANNED, { 1, 2, 3 });
+		auto found_docs = server_4.FindTopDocuments("fluffy cat collar"s, DocumentStatus::REMOVED);
+		ASSERT_EQUAL_HINT(found_docs.size(), 1, "Must be shown document with status REMOVED."s); // должен быть выведен один документ со статусом REMOVED
+		ASSERT_EQUAL_HINT(found_docs[0].id, 0, "Document with status ACTUAL must be with id 10."s);
+	}
 }
 
-// Тест проверяет вывод документов со статусом BANNED
-void TestOutputOfDocumentWithThe_BANNED_Status() {
-	SearchServer server;
-	// проверяем вывод документов со статусом BANNED
-	server.AddDocument(7, "fluffy well-groomed cat with a collar", DocumentStatus::ACTUAL, { 1, 2, 3 });
-	server.AddDocument(8, "beautiful cat with expressive eyes", DocumentStatus::IRRELEVANT, { 3, 5, 4 });
-	server.AddDocument(9, "fluffy cat", DocumentStatus::BANNED, { 1, 2, 3 });
-	auto found_docs = server.FindTopDocuments("fluffy cat collar"s, DocumentStatus::BANNED);
-	ASSERT_EQUAL_HINT(found_docs.size(), 1, "Must be shown document with status BANNED."s); // должно быть выведено два документа со статусом BANNED
-	ASSERT_EQUAL_HINT(found_docs[0].id, 9, "Document with status ACTUAL must be with id 9."s);
-}
-
-// Тест проверяет вывод документов со статусом REMOVED
-void TestOutputOfDocumentWithThe_REMOVED_Status() {
-	SearchServer server;
-	// проверяем вывод документов со статусом REMOVED
-	server.AddDocument(10, "fluffy well-groomed cat with a collar", DocumentStatus::REMOVED, { 1, 2, 3 });
-	server.AddDocument(11, "beautiful cat with expressive eyes", DocumentStatus::IRRELEVANT, { 3, 5, 4 });
-	server.AddDocument(12, "fluffy cat", DocumentStatus::BANNED, { 1, 2, 3 });
-	auto found_docs = server.FindTopDocuments("fluffy cat collar"s, DocumentStatus::REMOVED);
-	ASSERT_EQUAL_HINT(found_docs.size(), 1, "Must be shown document with status REMOVED."s); // должно быть выведено два документа со статусом REMOVED
-	ASSERT_EQUAL_HINT(found_docs[0].id, 10, "Document with status ACTUAL must be with id 10."s);
-}
 
 // Тест для проверки правильности расчёта среднего рейтинга
-void TestAverageRating() {
+void TestFindCorrectAverageRating() {
 	SearchServer server;
+
 	server.AddDocument(0, "fluffy well-groomed cat with a collar", DocumentStatus::REMOVED, { 1, 2, 3 });
 	auto found_docs = server.FindTopDocuments("fluffy cat collar"s, DocumentStatus::REMOVED);
-	ASSERT_EQUAL_HINT(found_docs[0].rating, 2, "Rating must be 2."s);
+	ASSERT_EQUAL_HINT(found_docs[0].rating, ((1+2+3)/3), "Rating must be 2."s);
 	found_docs.clear();
+
 	server.AddDocument(1, "fluffy well-groomed cat with a collar", DocumentStatus::REMOVED, { 2, 4, 7 });
 	found_docs = server.FindTopDocuments("fluffy cat collar"s, DocumentStatus::REMOVED);
-	ASSERT_EQUAL_HINT(found_docs[0].rating, 4, "Rating must be 4."s);
+	ASSERT_EQUAL_HINT(found_docs[0].rating, ((2+4+7)/3), "Rating must be 4."s);
 }
 
-void TestRelevance() {
+void TestFindCorrectRelevance() {
 	SearchServer server;
 	server.AddDocument(20, "fluffy well-groomed cat with a collar", DocumentStatus::ACTUAL, { 1, 2, 3 });
 	server.AddDocument(21, "beautiful cat with expressive eyes", DocumentStatus::ACTUAL, { 1, 2, 3 });
 	server.AddDocument(22, "fluffy white cat", DocumentStatus::ACTUAL, { 1, 2, 3 });
 	auto found_docs = server.FindTopDocuments("fluffy cat collar"s, DocumentStatus::ACTUAL);
+	// проверка правильности расстановки документов согласно их релевантности
 	ASSERT_EQUAL_HINT(found_docs[0].id, 20, "Document with id 20 first by relevance"s);
-	ASSERT_EQUAL_HINT(found_docs[1].id, 22, "Document with id 20 second by relevance"s);
-	ASSERT_EQUAL_HINT(found_docs[2].id, 21, "Document with id 20 third by relevance"s);
+	ASSERT_EQUAL_HINT(found_docs[1].id, 22, "Document with id 22 second by relevance"s);
+	ASSERT_EQUAL_HINT(found_docs[2].id, 21, "Document with id 21 third by relevance"s);
+
+	// проверка правильности выводимой программой релевантности
+	// расчёт tf для слова "cat" для каждого документа и расчёт idf для слова "cat"
+	double tf_id_20_cat = 1.0 / 6.0;
+	double tf_id_21_cat = 1.0 / 5.0;
+	double tf_id_22_cat = 1.0 / 3.0;
+	double idf_cat = log(3.0/3.0);
+	// расчёт tf для слова "fluffy" для каждого документа и расчёт idf для слова "fluffy"
+	double tf_id_20_fluffy = 1.0 / 6.0;
+	double tf_id_21_fluffy = 0.0 / 5.0;
+	double tf_id_22_fluffy = 1.0 / 3.0;
+	double idf_fluffy = log(3.0 / 2.0);
+	// расчёт tf для слова "collar" для каждого документа и расчёт idf для слова "collar"
+	double tf_id_20_collar = 1.0 / 6.0;
+	double tf_id_21_collar = 0.0 / 5.0;
+	double tf_id_22_collar = 0.0 / 3.0;
+	double idf_collar = log(3.0 / 1.0);
+	// расчёт требуемой релевантности для каждого документа
+	double id_20_relevance_correct = tf_id_20_cat * idf_cat + tf_id_20_fluffy* idf_fluffy+ tf_id_20_collar* idf_collar;
+	double id_21_relevance_correct = tf_id_21_cat * idf_cat + tf_id_21_fluffy * idf_fluffy + tf_id_21_collar * idf_collar;
+	double id_22_relevance_correct = tf_id_22_cat * idf_cat + tf_id_22_fluffy * idf_fluffy + tf_id_22_collar * idf_collar;
 	for (const auto& doc : found_docs) {
 		if (doc.id == 20) {
-			double relevance = 0;
-			double difference = abs(doc.relevance - 0.2506);
-			if (difference < 0.0001) {
-				relevance = 0.2506;
-			}
-			ASSERT_EQUAL(relevance, 0.2506);
+			ASSERT_EQUAL(doc.relevance, id_20_relevance_correct);
 		}
 		if (doc.id == 21) {
-			ASSERT_EQUAL(doc.relevance, 0);
+			ASSERT_EQUAL(doc.relevance, id_21_relevance_correct);
 		}
 		if (doc.id == 22) {
-			double relevance = 0;
-			double difference = abs(doc.relevance - 0.1351);
-			if (difference < 0.0001) {
-				relevance = 0.1351;
-			}
-			ASSERT_EQUAL(relevance, 0.1351);
+			ASSERT_EQUAL(doc.relevance, id_22_relevance_correct);
 		}
 	}
 }
@@ -427,12 +448,9 @@ void TestRelevance() {
 void TestSearchServer() {
 	RUN_TEST(TestExcludeStopWordsFromAddedDocumentContent);
 	RUN_TEST(TestExcludedDocsWithMinusWords);
-	RUN_TEST(TestOutputOfDocumentWithThe_ACTUAL_Status);
-	RUN_TEST(TestOutputOfDocumentWithThe_IRRELEVANT_Status);
-	RUN_TEST(TestOutputOfDocumentWithThe_BANNED_Status);
-	RUN_TEST(TestOutputOfDocumentWithThe_REMOVED_Status);
-	RUN_TEST(TestAverageRating);
-	RUN_TEST(TestRelevance);
+	RUN_TEST(TestingCorrectOutputStatus);
+	RUN_TEST(TestFindCorrectAverageRating);
+	RUN_TEST(TestFindCorrectRelevance);
 }
 
 
