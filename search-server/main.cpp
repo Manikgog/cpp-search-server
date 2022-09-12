@@ -330,7 +330,7 @@ void TestExcludedDocsWithMinusWords() {
 	ASSERT_EQUAL(found_docs.size(), 0); // когда документ содержит минус-слова, то он не выводится
 }
 
-// Тест проверяет вывод документов со статусом IRRELEVANT
+// Тест проверяет вывод документов по статусу
 void TestingCorrectOutputStatus() {
 	SearchServer server;
 	{
