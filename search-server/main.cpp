@@ -317,10 +317,6 @@ void TestExcludeStopWordsFromAddedDocumentContent() {
 }
 
 
-/*
-Разместите код остальных тестов здесь
-*/
-
 // Тест проверяет исключение документа из найденных при наличии в нём минус-слов
 void TestExcludedDocsWithMinusWords() {
 	SearchServer server;
@@ -332,12 +328,6 @@ void TestExcludedDocsWithMinusWords() {
 	server.AddDocument(1, "beautiful shepherd with expressive eyes", DocumentStatus::ACTUAL, { 3, 5, 4 });
 	found_docs = server.FindTopDocuments("fluffy cat -collar"s); // добавляем минус-слово и проверяем вывод
 	ASSERT_EQUAL(found_docs.size(), 0); // когда документ содержит минус-слова, то он не выводится
-}
-
-// Тест проверяет вывод документов со статусом ACTUAL
-void TestOutputOfDocumentWithThe_ACTUAL_Status() {
-	SearchServer server;
-	
 }
 
 // Тест проверяет вывод документов со статусом IRRELEVANT
