@@ -17,8 +17,12 @@ const double ACCURACY = 1e-6;
 template <typename T, typename U>
 void AssertEqualImpl(const T& t, const U& u, const string& t_str, const string& u_str, const string& file,
 	const string& func, unsigned line, const string& hint) {
+<<<<<<< HEAD
+	if (t != u) {
+=======
 	int t_= t; int u_ = u;
 	if (t_ != u_) {
+>>>>>>> d7257e45c87e5dfb6a143bf389be5a3c8358c31d
 		cout << boolalpha;
 		cout << file << "("s << line << "): "s << func << ": "s;
 		cout << "ASSERT_EQUAL("s << t_str << ", "s << u_str << ") failed: "s;
@@ -268,12 +272,26 @@ private:
 				continue;
 			}
 			const double inverse_document_freq = ComputeWordInverseDocumentFreq(word);
+<<<<<<< HEAD
+			for (const auto id_relevance : word_to_document_freqs_.at(word)) {
+				const auto& doc = documents_.at(id_relevance.first);
+				if (filter(id_relevance.first, doc.status, doc.rating)) {
+					document_to_relevance[id_relevance.first] += id_relevance.second * inverse_document_freq;
+				}
+			}
+			/*
+=======
+>>>>>>> d7257e45c87e5dfb6a143bf389be5a3c8358c31d
 			for (const auto[id, relevance] : word_to_document_freqs_.at(word)) {
 				const auto& doc = documents_.at(id);
 				if (filter(id, doc.status, doc.rating)) {
 					document_to_relevance[id] += relevance * inverse_document_freq;
 				}
 			}
+<<<<<<< HEAD
+			*/
+=======
+>>>>>>> d7257e45c87e5dfb6a143bf389be5a3c8358c31d
 		}
 
 		for (const string& word : query.minus_words) {
@@ -286,9 +304,19 @@ private:
 		}
 
 		vector<Document> matched_documents;
+<<<<<<< HEAD
+		for (const auto id_relevance : document_to_relevance) {
+			matched_documents.push_back({ id_relevance.first, id_relevance.second, documents_.at(id_relevance.first).rating });
+=======
+		for (const auto[id, relevance] : document_to_relevance) {
+			matched_documents.push_back({ id, relevance, documents_.at(id).rating });
+>>>>>>> d7257e45c87e5dfb6a143bf389be5a3c8358c31d
+		}
+		/*
 		for (const auto[id, relevance] : document_to_relevance) {
 			matched_documents.push_back({ id, relevance, documents_.at(id).rating });
 		}
+		*/
 		return matched_documents;
 	}
 };
@@ -317,6 +345,13 @@ void TestExcludeStopWordsFromAddedDocumentContent() {
 }
 
 
+<<<<<<< HEAD
+/*
+Разместите код остальных тестов здесь
+*/
+
+=======
+>>>>>>> d7257e45c87e5dfb6a143bf389be5a3c8358c31d
 // Тест проверяет исключение документа из найденных при наличии в нём минус-слов
 void TestExcludedDocsWithMinusWords() {
 	SearchServer server;
@@ -330,7 +365,17 @@ void TestExcludedDocsWithMinusWords() {
 	ASSERT_EQUAL(found_docs.size(), 0); // когда документ содержит минус-слова, то он не выводится
 }
 
+<<<<<<< HEAD
+// Тест проверяет вывод документов со статусом ACTUAL
+void TestOutputOfDocumentWithThe_ACTUAL_Status() {
+	SearchServer server;
+	
+}
+
+// Тест проверяет вывод документов со статусом IRRELEVANT
+=======
 // Тест проверяет вывод документов по статусу
+>>>>>>> d7257e45c87e5dfb6a143bf389be5a3c8358c31d
 void TestingCorrectOutputStatus() {
 	SearchServer server;
 	{
@@ -396,11 +441,15 @@ void TestFindCorrectRelevance() {
 	server.AddDocument(21, "beautiful cat with expressive eyes", DocumentStatus::ACTUAL, { 1, 2, 3 });
 	server.AddDocument(22, "fluffy white cat", DocumentStatus::ACTUAL, { 1, 2, 3 });
 	auto found_docs = server.FindTopDocuments("fluffy cat collar"s, DocumentStatus::ACTUAL);
+<<<<<<< HEAD
+	
+=======
 	// проверка правильности расстановки документов согласно их релевантности
 	ASSERT_EQUAL_HINT(found_docs[0].id, 20, "Document with id 20 first by relevance"s);
 	ASSERT_EQUAL_HINT(found_docs[1].id, 22, "Document with id 22 second by relevance"s);
 	ASSERT_EQUAL_HINT(found_docs[2].id, 21, "Document with id 21 third by relevance"s);
 
+>>>>>>> d7257e45c87e5dfb6a143bf389be5a3c8358c31d
 	// проверка правильности выводимой программой релевантности
 	// расчёт tf для слова "cat" для каждого документа и расчёт idf для слова "cat"
 	double tf_id_20_cat = 1.0 / 6.0;
@@ -434,6 +483,91 @@ void TestFindCorrectRelevance() {
 	}
 }
 
+<<<<<<< HEAD
+// проверка правильности расстановки документов согласно их релевантности
+void TestCheckCorrectSortOfRelevance() {
+	SearchServer server;
+	server.AddDocument(20, "fluffy well-groomed cat with a collar", DocumentStatus::ACTUAL, { 1, 2, 3 });
+	server.AddDocument(21, "beautiful cat with expressive eyes", DocumentStatus::ACTUAL, { 1, 2, 3 });
+	server.AddDocument(22, "fluffy white cat", DocumentStatus::ACTUAL, { 1, 2, 3 });
+	auto found_docs = server.FindTopDocuments("fluffy cat collar"s, DocumentStatus::ACTUAL);
+	ASSERT_EQUAL_HINT(found_docs[0].id, 20, "Document with id 20 first by relevance"s);
+	ASSERT_EQUAL_HINT(found_docs[1].id, 22, "Document with id 22 second by relevance"s);
+	ASSERT_EQUAL_HINT(found_docs[2].id, 21, "Document with id 21 third by relevance"s);
+}
+
+// проверка правильности расстановки документов согласно предикату
+void TestCheckCorrectPredicate() {
+	// предикат - рейтинг
+	{
+		SearchServer server_1;
+		server_1.AddDocument(0, "fluffy well-groomed cat with a collar", DocumentStatus::ACTUAL, { 1, 2, 3 }); // рейтинг 2
+		server_1.AddDocument(1, "beautiful cat with expressive eyes", DocumentStatus::ACTUAL, { 1, 2, 3, 4 }); // рейтинг 2
+		server_1.AddDocument(2, "fluffy white cat", DocumentStatus::ACTUAL, { 1, 2, 3, 5, 6 }); // рейтинг 3
+		server_1.AddDocument(3, "smooth-haired ginger cat with a short tail", DocumentStatus::ACTUAL, { 1, 2, 3, 1, 2 }); // рейтинг 1
+		server_1.AddDocument(4, "a cat with big ears", DocumentStatus::ACTUAL, { 1, 2, 3, 2, 2 }); // рейтинг 2
+		server_1.AddDocument(5, "cat of the breed Russian blue", DocumentStatus::ACTUAL, { 1, 2, 3, 3, 2 }); // рейтинг 2 
+		server_1.AddDocument(6, "striped gray cat with white mustache and blue eyes", DocumentStatus::ACTUAL, { 1, 2, 3, 4, 3 }); // рейтинг 2
+		server_1.AddDocument(7, "black cat with white tips of paws and muzzle", DocumentStatus::ACTUAL, { 1, 2, 3, 7 }); // рейтинг 3
+		server_1.AddDocument(8, "a bald cat with big ears and eyes", DocumentStatus::ACTUAL, { 1, 2, 3, 8 }); // рейтинг 3
+		auto found_docs = server_1.FindTopDocuments("fluffy cat collar"s, [](int document_id, DocumentStatus status, int rating) { return rating == 2; });
+		ASSERT_EQUAL_HINT(found_docs.size(), 5, "Must be shown 5 documents with rating 2."s);
+	}
+
+	// предикат - статус
+	{
+		SearchServer server_2;
+		server_2.AddDocument(0, "fluffy well-groomed cat with a collar", DocumentStatus::ACTUAL, { 1, 2, 3 });
+		server_2.AddDocument(1, "beautiful cat with expressive eyes", DocumentStatus::BANNED, { 1, 2, 3, 4 });
+		server_2.AddDocument(2, "fluffy white cat", DocumentStatus::IRRELEVANT, { 1, 2, 3, 5, 6 });
+		server_2.AddDocument(3, "smooth-haired ginger cat with a short tail", DocumentStatus::REMOVED, { 1, 2, 3, 1, 2 });
+		server_2.AddDocument(4, "a cat with big ears", DocumentStatus::ACTUAL, { 1, 2, 3, 2, 2 });
+		server_2.AddDocument(5, "cat of the breed Russian blue", DocumentStatus::ACTUAL, { 1, 2, 3, 3, 2 });
+		server_2.AddDocument(6, "striped gray cat with white mustache and blue eyes", DocumentStatus::BANNED, { 1, 2, 3, 4, 3 });
+		server_2.AddDocument(7, "black cat with white tips of paws and muzzle", DocumentStatus::ACTUAL, { 1, 2, 3, 7 });
+		server_2.AddDocument(8, "a bald cat with big ears and eyes", DocumentStatus::ACTUAL, { 1, 2, 3, 8 });
+		{
+			auto found_docs = server_2.FindTopDocuments("fluffy cat collar"s, [](int document_id, DocumentStatus status, int rating) { return status == DocumentStatus::ACTUAL; });
+			ASSERT_EQUAL_HINT(found_docs.size(), 5, "Must be shown 6 documents with status ACTUAL."s);
+		}
+		{
+			auto found_docs = server_2.FindTopDocuments("fluffy cat collar"s, [](int document_id, DocumentStatus status, int rating) { return status == DocumentStatus::BANNED; });
+			ASSERT_EQUAL_HINT(found_docs.size(), 2, "Must be shown 2 documents with status BANNED."s);
+		}
+		{
+			auto found_docs = server_2.FindTopDocuments("fluffy cat collar"s, [](int document_id, DocumentStatus status, int rating) { return status == DocumentStatus::IRRELEVANT; });
+			ASSERT_EQUAL_HINT(found_docs.size(), 1, "Must be shown 1 documents with status IRRELEVANT."s);
+		}
+		{
+			auto found_docs = server_2.FindTopDocuments("fluffy cat collar"s, [](int document_id, DocumentStatus status, int rating) { return status == DocumentStatus::REMOVED; });
+			ASSERT_EQUAL_HINT(found_docs.size(), 1, "Must be shown 1 documents with status REMOVED."s);
+		}
+	}
+	// предикат - номер документа
+	{
+		SearchServer server_3;
+		server_3.AddDocument(0, "fluffy well-groomed cat with a collar", DocumentStatus::ACTUAL, { 1, 2, 3 });
+		server_3.AddDocument(1, "beautiful cat with expressive eyes", DocumentStatus::BANNED, { 1, 2, 3, 4 });
+		server_3.AddDocument(2, "fluffy white cat", DocumentStatus::IRRELEVANT, { 1, 2, 3, 5, 6 });
+		server_3.AddDocument(3, "smooth-haired ginger cat with a short tail", DocumentStatus::REMOVED, { 1, 2, 3, 1, 2 });
+		server_3.AddDocument(4, "a cat with big ears", DocumentStatus::ACTUAL, { 1, 2, 3, 2, 2 });
+		server_3.AddDocument(5, "cat of the breed Russian blue", DocumentStatus::ACTUAL, { 1, 2, 3, 3, 2 });
+		server_3.AddDocument(6, "striped gray cat with white mustache and blue eyes", DocumentStatus::BANNED, { 1, 2, 3, 4, 3 });
+		server_3.AddDocument(7, "black cat with white tips of paws and muzzle", DocumentStatus::ACTUAL, { 1, 2, 3, 7 });
+		server_3.AddDocument(9, "a bald cat with big ears and eyes", DocumentStatus::ACTUAL, { 1, 2, 3, 8 });
+		{
+			auto found_docs = server_3.FindTopDocuments("fluffy cat collar"s, [](int document_id, DocumentStatus status, int rating) { return document_id%2 != 0; });
+			ASSERT_EQUAL_HINT(found_docs.size(), 5, "Must be shown 5 documents with odd id."s);
+		}
+		{
+			auto found_docs = server_3.FindTopDocuments("fluffy cat collar"s, [](int document_id, DocumentStatus status, int rating) { return document_id % 2 == 0; });
+			ASSERT_EQUAL_HINT(found_docs.size(), 4, "Must be shown 4 documents with even id."s);
+		}
+	}
+}
+
+=======
+>>>>>>> d7257e45c87e5dfb6a143bf389be5a3c8358c31d
 // Функция TestSearchServer является точкой входа для запуска тестов
 void TestSearchServer() {
 	RUN_TEST(TestExcludeStopWordsFromAddedDocumentContent);
@@ -441,6 +575,11 @@ void TestSearchServer() {
 	RUN_TEST(TestingCorrectOutputStatus);
 	RUN_TEST(TestFindCorrectAverageRating);
 	RUN_TEST(TestFindCorrectRelevance);
+<<<<<<< HEAD
+	RUN_TEST(TestCheckCorrectSortOfRelevance);
+	RUN_TEST(TestCheckCorrectPredicate);
+=======
+>>>>>>> d7257e45c87e5dfb6a143bf389be5a3c8358c31d
 }
 
 
@@ -451,4 +590,8 @@ int main() {
 	TestSearchServer();
 	// Если вы видите эту строку, значит все тесты прошли успешно
 	cout << "Search server testing finished"s << endl;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> d7257e45c87e5dfb6a143bf389be5a3c8358c31d
