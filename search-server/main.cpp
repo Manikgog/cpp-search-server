@@ -7,10 +7,12 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <numeric>
 
 using namespace std;
 
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
+const int ACCURACY = 1e-6;
 
 string ReadLine() {
     string s;
@@ -100,8 +102,12 @@ public:
 
     void AddDocument(int document_id, const string& document, DocumentStatus status,
                                    const vector<int>& ratings) {
-        if ((document_id < 0) || (documents_.count(document_id) > 0)) {
-            throw invalid_argument("Negative id or used id"s);
+        if (document_id < 0) {
+            throw invalid_argument("Negative id"s);
+        }
+
+        if (documents_.count(document_id) > 0) {
+            throw invalid_argument("Used id"s);
         }
 
         if (IsValidWord(document) == false) {
@@ -126,7 +132,7 @@ public:
         auto matched_documents = FindAllDocuments(query, document_predicate);
 
         sort(matched_documents.begin(), matched_documents.end(), [](const Document& lhs, const Document& rhs) {
-            if (abs(lhs.relevance - rhs.relevance) < 1e-6) {
+            if (abs(lhs.relevance - rhs.relevance) < ACCURACY) {
                 return lhs.rating > rhs.rating;
             } else {
                 return lhs.relevance > rhs.relevance;
@@ -222,10 +228,7 @@ private:
         if (ratings.empty()) {
             return 0;
         }
-        int rating_sum = 0;
-        for (const int rating : ratings) {
-            rating_sum += rating;
-        }
+        int rating_sum = accumulate(ratings.begin(), ratings.end(), 0);
         return rating_sum / static_cast<int>(ratings.size());
     }
 
@@ -336,7 +339,7 @@ int main() {
         search_server.AddDocument(2, "пушистый пёс и модный ошейник"s, DocumentStatus::ACTUAL, {1, 2});
         search_server.AddDocument(5, "большой пёс скворец"s, DocumentStatus::ACTUAL, {1, 3, 2});
         vector<Document> documents = search_server.FindTopDocuments("пушистый пёс");
-        int number = 0;
+        int number = 3;
         search_server.GetDocumentId(number);
         for (const Document& document : documents) {
             PrintDocument(document);
