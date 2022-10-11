@@ -10,6 +10,8 @@
 
 using namespace std;
 
+const double ACCURACY = 1e-6;
+
 class SearchServer {
 public:
     explicit SearchServer(const string& stop_words_text);
@@ -39,7 +41,7 @@ public:
 
         sort(matched_documents.begin(), matched_documents.end(),
              [](const Document& lhs, const Document& rhs) {
-                 if (abs(lhs.relevance - rhs.relevance) < 1e-6) {
+                 if (abs(lhs.relevance - rhs.relevance) < ACCURACY) {
                      return lhs.rating > rhs.rating;
                  } else {
                      return lhs.relevance > rhs.relevance;
