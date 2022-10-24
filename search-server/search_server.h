@@ -1,4 +1,3 @@
-//Вставьте сюда своё решение из урока «Очередь запросов» темы «Стек, очередь, дек».
 #pragma once
 #include <string>
 #include <vector>
@@ -24,13 +23,9 @@ public:
             throw invalid_argument("Some of stop words are invalid"s);
         }
     }
-
-    
     
     void AddDocument(int document_id, const string& document, DocumentStatus status,
                      const vector<int>& ratings);
-
-    
 
     template <typename DocumentPredicate>
     vector<Document> FindTopDocuments(const string& raw_query,
@@ -61,13 +56,19 @@ public:
 
     int GetDocumentCount() const;
 
-    int GetDocumentId(int index) const;
+    //int GetDocumentId(int index) const;
+
+    vector<int>::iterator begin();
+
+    vector<int>::iterator end();
 
    tuple<vector<string>, DocumentStatus> MatchDocument(const string& raw_query,
                                                         int document_id) const;
 
-    
+    const map<string, double>& GetWordFrequencies(int document_id) const;
 
+    void RemoveDocument(int document_id);
+    
 private:
     struct DocumentData {
         int rating;
@@ -77,6 +78,7 @@ private:
     map<string, map<int, double>> word_to_document_freqs_;
     map<int, DocumentData> documents_;
     vector<int> document_ids_;
+    
 
     bool IsStopWord(const string& word) const;
 
@@ -85,7 +87,6 @@ private:
     vector<string> SplitIntoWordsNoStop(const string& text) const;
 
     static int ComputeAverageRating(const vector<int>& ratings);
-
 
     struct QueryWord {
         string data;
@@ -139,4 +140,3 @@ private:
         return matched_documents;
     }
 };
-

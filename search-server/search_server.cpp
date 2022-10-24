@@ -23,6 +23,59 @@ void SearchServer::AddDocument(int document_id, const string& document, Document
     document_ids_.push_back(document_id);
 }
 
+vector<int>::iterator SearchServer::begin() {
+    return document_ids_.begin();
+}
+
+vector<int>::iterator SearchServer::end() {
+    return document_ids_.end();
+}
+
+map<string, double> list_word_tf;
+const map<string, double>& SearchServer::GetWordFrequencies(int document_id) const {
+    list_word_tf.clear();
+    for (const auto word_id_tf : word_to_document_freqs_) {
+        for (const auto id_tf : word_id_tf.second) {
+            if (document_id == id_tf.first) {
+                list_word_tf.insert({word_id_tf.first, id_tf.second});
+            }
+        }
+    }
+    return list_word_tf;
+}
+
+void SearchServer::RemoveDocument(int document_id) {
+    // удаление document_id из вектора id документов
+    vector<int> ids;
+    for (auto id : document_ids_) {
+        if (id != document_id) {
+            ids.push_back(id);
+        }
+    }
+    document_ids_.clear();
+    document_ids_ = ids;
+    // удаление id и данных документа с указанным document_id
+    map<int, DocumentData> docs;
+    for (auto id_docdata : documents_) {
+        if (id_docdata.first != document_id) {
+            docs.insert(id_docdata);
+        }
+    }
+    documents_.clear();
+    documents_ = docs;
+    // удаление документа с его частотой слова из map<string, map<int, double>> word_to_document_freqs_;
+    map<string, map<int, double>> word_to_doc_freqs;
+    for (const auto word_id_tf : word_to_document_freqs_) {
+        for (const auto id_tf : word_id_tf.second) {
+            if (document_id != id_tf.first) {
+                word_to_doc_freqs[word_id_tf.first][id_tf.first] += id_tf.second;
+            }
+        }
+    }
+    word_to_document_freqs_.clear();
+    word_to_document_freqs_ = word_to_doc_freqs;
+}
+
 vector<Document> SearchServer::FindTopDocuments(const string& raw_query, DocumentStatus status) const {
     return FindTopDocuments(
         raw_query, [status](int document_id, DocumentStatus document_status, int rating) {
@@ -38,9 +91,6 @@ int SearchServer::GetDocumentCount() const {
     return documents_.size();
 }
 
-int SearchServer::GetDocumentId(int index) const {
-    return document_ids_.at(index);
-}
 
 tuple<vector<string>, DocumentStatus> SearchServer::MatchDocument(const string& raw_query, int document_id) const {
     const auto query = ParseQuery(raw_query);
