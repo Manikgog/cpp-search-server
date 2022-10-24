@@ -58,7 +58,22 @@ void AddDocument(SearchServer& search_server, int document_id, const string& doc
 
 int main() {
     SearchServer search_server("and in at"s);
-       
+    /*search_server.AddDocument(1, "curly cat curly tail"s, DocumentStatus::ACTUAL, {7, 2, 7});
+    search_server.AddDocument(2, "curly dog and fancy collar"s, DocumentStatus::ACTUAL, {1, 2, 3});
+    search_server.AddDocument(3, "big cat fancy collar "s, DocumentStatus::ACTUAL, {1, 2, 8});
+    search_server.AddDocument(4, "big dog sparrow Eugene"s, DocumentStatus::ACTUAL, {1, 3, 2});
+    search_server.AddDocument(5, "big dog sparrow Vasiliy"s, DocumentStatus::ACTUAL, {1, 1, 1});
+    {
+        LOG_DURATION_STREAM("MatchDocuments", cout);
+        MatchDocuments(search_server, "big dog"s);
+    }
+
+    {
+        LOG_DURATION_STREAM("FindTopDocuments", cout);
+        FindTopDocuments(search_server, "big dog");
+    }
+    */
+
     // отличие только в стоп-словах, считаем дубликатом
     AddDocument(search_server, 4, "funny pet and curly hair"s, DocumentStatus::ACTUAL, {1, 2});
 
@@ -78,9 +93,34 @@ int main() {
     AddDocument(search_server, 9, "nasty rat with curly hair"s, DocumentStatus::ACTUAL, {1, 2});
     AddDocument(search_server, 10, "funny pet and curly hair"s, DocumentStatus::ACTUAL, {1, 2});
 
-    const auto search_results = search_server.FindTopDocuments("curly dog"s);
+    /*AddDocument(search_server, 4, "funny pet and curly hair"s, DocumentStatus::ACTUAL, {1, 2});
+    AddDocument(search_server, 5, "funny pet and curly hair"s, DocumentStatus::ACTUAL, {1, 2});
+    AddDocument(search_server, 6, "funny pet and curly hair"s, DocumentStatus::ACTUAL, {1, 2});
+    AddDocument(search_server, 7, "funny pet and curly hair"s, DocumentStatus::ACTUAL, {1, 2});
+    AddDocument(search_server, 8, "funny pet and curly hair"s, DocumentStatus::ACTUAL, {1, 2});
+    AddDocument(search_server, 9, "funny pet and curly hair"s, DocumentStatus::ACTUAL, {1, 2});*/
+    // int id = 0;
+    // cout << "enter id: ";
+    // cin >> id;
+    /*
+    const auto str_tf = search_server.GetWordFrequencies(id);
+
+    for (auto word_tf : str_tf) {
+        cout << word_tf.first << " - "s << word_tf.second << endl;
+    }
+    cout << endl;
+    */
+    /*
+    for (const int document_id : search_server) {
+        cout << document_id << ' ';
+    }
+    cout << endl;
+
+    search_server.RemoveDocument(id);
+*/
+    auto search_results = search_server.FindTopDocuments("curly dog"s);
     int page_size = 2;
-    const auto pages = Paginate(search_results, page_size);
+    auto pages = Paginate(search_results, page_size);
     // Выводим найденные документы по страницам
     for (auto page = pages.begin(); page != pages.end(); ++page) {
         cout << *page << endl;
@@ -88,6 +128,15 @@ int main() {
     }
 
     RemoveDuplicates(search_server);
-    
+
+    search_results = search_server.FindTopDocuments("curly dog"s);
+    page_size = 2;
+    pages = Paginate(search_results, page_size);
+    // Выводим найденные документы по страницам
+    for (auto page = pages.begin(); page != pages.end(); ++page) {
+        cout << *page << endl;
+        cout << "Page break"s << endl;
+    }
+
     return 0;
 }

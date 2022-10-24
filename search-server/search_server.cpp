@@ -44,6 +44,20 @@ const map<string, double>& SearchServer::GetWordFrequencies(int document_id) con
     return list_word_tf;
 }
 
+pair<int, set<string>> id_words;
+pair<int, set<string>> SearchServer::GetWord(int document_id) const {
+    set<string> words;
+    for (const auto word_id_tf : word_to_document_freqs_) {
+        for (const auto id_tf : word_id_tf.second) {
+            if (document_id == id_tf.first) {
+                words.insert(word_id_tf.first);
+            }
+        }
+    }
+    id_words = {document_id, words};
+    return id_words;
+}
+
 void SearchServer::RemoveDocument(int document_id) {
     // удаление document_id из вектора id документов
     vector<int> ids;
