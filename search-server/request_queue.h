@@ -13,7 +13,7 @@ using namespace std;
 class RequestQueue {
 public:
     explicit RequestQueue(const SearchServer& search_server);
-
+   
     // сделаем "обёртки" для всех методов поиска, чтобы сохранять результаты для нашей статистики
     template <typename DocumentPredicate>
     vector<Document> AddFindRequest(const string& raw_query, DocumentPredicate document_predicate) {
@@ -37,7 +37,7 @@ public:
     vector<Document> AddFindRequest(const string& raw_query);
 
     int GetNoResultRequests() const;
-
+    
 private:
     struct QueryResult {
         string query;               // поисковый запрос
@@ -46,5 +46,5 @@ private:
     deque<QueryResult> requests_;   // двухстороняя очередь структур QueryResult
     const static int min_in_day_ = 1440; // количество минут в дне
     int min_ = 0;                           // начальное количество минут
-    const SearchServer& search_server_;     // ссылка на экземпляр класса SearchServer
-};
+    const SearchServer& search_server_;     // ссылка на экземпляр класса SearchServer 
+}; 

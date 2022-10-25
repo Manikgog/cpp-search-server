@@ -44,9 +44,10 @@ const map<string, double>& SearchServer::GetWordFrequencies(int document_id) con
     return list_word_tf;
 }
 
-pair<int, set<string>> id_words;
-pair<int, set<string>> SearchServer::GetWord(int document_id) const {
+pair<int, string> id_words;
+pair<int, string> SearchServer::GetWord(int document_id) const {
     set<string> words;
+    string str;
     for (const auto word_id_tf : word_to_document_freqs_) {
         for (const auto id_tf : word_id_tf.second) {
             if (document_id == id_tf.first) {
@@ -54,7 +55,11 @@ pair<int, set<string>> SearchServer::GetWord(int document_id) const {
             }
         }
     }
-    id_words = {document_id, words};
+    for (string word : words) {
+        str+=word;
+        str+=' ';
+    }
+    id_words = {document_id, str};
     return id_words;
 }
 

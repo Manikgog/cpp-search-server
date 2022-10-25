@@ -1,4 +1,3 @@
-//Вставьте сюда своё решение из урока «Очередь запросов» темы «Стек, очередь, дек».
 #pragma once
 #include <string>
 #include <vector>
@@ -15,7 +14,7 @@ const double ACCURACY = 1e-6;
 class SearchServer {
 public:
     explicit SearchServer(const string& stop_words_text);
-
+    
     template <typename StringContainer>
     explicit SearchServer(const StringContainer& stop_words)
         : stop_words_(MakeUniqueNonEmptyStrings(stop_words))  // Extract non-empty stop words
@@ -24,7 +23,7 @@ public:
             throw invalid_argument("Some of stop words are invalid"s);
         }
     }
-
+    
     void AddDocument(int document_id, const string& document, DocumentStatus status,
                      const vector<int>& ratings);
 
@@ -52,12 +51,10 @@ public:
 
 
     vector<Document> FindTopDocuments(const string& raw_query, DocumentStatus status) const;
-
+    
     vector<Document> FindTopDocuments(const string& raw_query) const;
 
     int GetDocumentCount() const;
-
-    //int GetDocumentId(int index) const;
 
     vector<int>::iterator begin();
 
@@ -68,10 +65,10 @@ public:
 
     const map<string, double>& GetWordFrequencies(int document_id) const;
 
-    pair<int, set<string>> GetWord(int document_id) const;
+    pair<int, string> GetWord(int document_id) const;
 
     void RemoveDocument(int document_id);
-
+    
 private:
     struct DocumentData {
         int rating;
@@ -81,7 +78,7 @@ private:
     map<string, map<int, double>> word_to_document_freqs_;
     map<int, DocumentData> documents_;
     vector<int> document_ids_;
-
+    
 
     bool IsStopWord(const string& word) const;
 
@@ -106,9 +103,9 @@ private:
 
     Query ParseQuery(const string& text) const;
 
-
+    
     double ComputeWordInverseDocumentFreq(const string& word) const;
-
+    
     template <typename DocumentPredicate>
     vector<Document> FindAllDocuments(const Query& query,
                                       DocumentPredicate document_predicate) const {

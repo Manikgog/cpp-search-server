@@ -67,13 +67,13 @@ int main() {
         LOG_DURATION_STREAM("MatchDocuments", cout);
         MatchDocuments(search_server, "big dog"s);
     }
-
+    
     {
         LOG_DURATION_STREAM("FindTopDocuments", cout);
         FindTopDocuments(search_server, "big dog");
     }
     */
-
+    
     // отличие только в стоп-словах, считаем дубликатом
     AddDocument(search_server, 4, "funny pet and curly hair"s, DocumentStatus::ACTUAL, {1, 2});
 
@@ -115,7 +115,7 @@ int main() {
         cout << document_id << ' ';
     }
     cout << endl;
-
+    
     search_server.RemoveDocument(id);
 */
     auto search_results = search_server.FindTopDocuments("curly dog"s);
@@ -128,7 +128,7 @@ int main() {
     }
 
     RemoveDuplicates(search_server);
-
+        
     search_results = search_server.FindTopDocuments("curly dog"s);
     page_size = 2;
     pages = Paginate(search_results, page_size);
@@ -137,6 +137,6 @@ int main() {
         cout << *page << endl;
         cout << "Page break"s << endl;
     }
-
+    
     return 0;
 }
