@@ -65,7 +65,7 @@ public:
 
     const map<string, double>& GetWordFrequencies(int document_id) const;
 
-    pair<int, string> GetWord(int document_id) const;
+    pair<string, int> GetWord(int document_id) const;
 
     void RemoveDocument(int document_id);
     

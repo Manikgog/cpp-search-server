@@ -44,8 +44,9 @@ const map<string, double>& SearchServer::GetWordFrequencies(int document_id) con
     return list_word_tf;
 }
 
-pair<int, string> id_words;
-pair<int, string> SearchServer::GetWord(int document_id) const {
+//pair<int, string> id_words;
+pair<string, int> words_ids;
+pair<string, int> SearchServer::GetWord(int document_id) const {
     set<string> words;
     string str;
     for (const auto word_id_tf : word_to_document_freqs_) {
@@ -59,8 +60,8 @@ pair<int, string> SearchServer::GetWord(int document_id) const {
         str+=word;
         str+=' ';
     }
-    id_words = {document_id, str};
-    return id_words;
+    words_ids = {str, document_id};
+    return words_ids;
 }
 
 void SearchServer::RemoveDocument(int document_id) {

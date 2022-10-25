@@ -2,17 +2,18 @@
 
 void RemoveDuplicates(SearchServer& search_server) {
     map<int, string> ids_words;
-    for (const int document_id : search_server) {
-        ids_words.insert(search_server.GetWord(document_id));
-    }
     map<string, vector<int>> words_ids;
-    for (auto id_words : ids_words) {
-        if (words_ids.count(id_words.second) == 0) {
-            words_ids[id_words.second].push_back(id_words.first);
+    for (const int document_id : search_server) {
+        pair<string, int> d = search_server.GetWord(document_id);
+        vector<int> v;
+        v.push_back(d.second);
+        if (words_ids.count(d.first) == 0) {
+            words_ids.insert({d.first, v});
         } else {
-            words_ids.at(id_words.second).push_back(id_words.first);
+            words_ids.at(d.first).push_back(d.second);
         }
     }
+    
     set<int> duplicates;
     for (auto str_ids : words_ids) {
         if (str_ids.second.size() > 1) {
